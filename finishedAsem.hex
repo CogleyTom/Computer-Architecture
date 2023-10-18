@@ -1,0 +1,90 @@
+
+Dump of file finishedAsem.obj
+
+File Type: COFF OBJECT
+
+FILE HEADER VALUES
+             14C machine (x86)
+               2 number of sections
+        652F4313 time date stamp Tue Oct 17 19:29:39 2023
+              FE file pointer to symbol table
+              10 number of symbols
+               0 size of optional header
+               0 characteristics
+
+SECTION HEADER #1
+   .data name
+       0 physical address
+       0 virtual address
+      14 size of raw data
+      64 file pointer to raw data (00000064 to 00000077)
+      78 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+C0300040 flags
+         Initialized Data
+         4 byte align
+         Read Write
+
+RAW DATA #1
+  00000000: 14 00 00 00 0A 00 00 00 05 00 00 00 19 00 00 00  ................
+  00000010: 0C 00 00 00                                      ....
+
+SECTION HEADER #2
+   .text name
+       0 physical address
+       0 virtual address
+      54 size of raw data
+      78 file pointer to raw data (00000078 to 000000CB)
+      CC file pointer to relocation table
+       0 file pointer to line numbers
+       5 number of relocations
+       0 number of line numbers
+60500020 flags
+         Code
+         16 byte align
+         Execute Read
+
+RAW DATA #2
+  00000000: 89 E5 E8 0D 00 00 00 B8 14 00 00 00 BA 03 00 00  .åè....¸....º...
+  00000010: 00 F7 FB C3 89 E5 A1 00 00 00 00 8B 1D 04 00 00  .÷ûÃ.å¡.........
+  00000020: 00 8B 0D 08 00 00 00 8B 15 0C 00 00 00 01 D8 6B  ..............Øk
+  00000030: C9 03 48 39 D0 75 FB 50 83 E9 02 83 F9 0A 7D F8  É.H9ÐuûP.é..ù.}ø
+  00000040: 51 58 8D 0D 10 00 00 00 83 C4 04 E8 B7 FF FF FF  QX.......Ä.è·ÿÿÿ
+  00000050: 83 C4 04 C3                                      .Ä.Ã
+
+RELOCATIONS #2
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000017  DIR32                      00000000         2  .data
+ 0000001D  DIR32                      00000004         2  .data
+ 00000023  DIR32                      00000008         2  .data
+ 00000029  DIR32                      0000000C         2  .data
+ 00000044  DIR32                      00000010         2  .data
+
+COFF SYMBOL TABLE
+000 00000000 DEBUG  notype       Filename     | .file
+    finishedAsem.asm
+002 00000000 SECT1  notype       Static       | .data
+    Section length   14, #relocs    0, #linenums    0, checksum        0
+004 00000000 SECT2  notype       Static       | .text
+    Section length   54, #relocs    5, #linenums    0, checksum        0
+006 00000000 ABS    notype       Static       | .absolut
+007 00000000 SECT1  notype       Static       | var
+008 00000004 SECT1  notype       Static       | ArrayVar
+009 00000010 SECT1  notype       Static       | loadVar
+00A 00000000 SECT2  notype       External     | main
+00B 00000007 SECT2  notype       Static       | secondFunc
+00C 00000014 SECT2  notype       Static       | firstFunc
+00D 00000032 SECT2  notype       Static       | decLoop
+00E 00000038 SECT2  notype       Static       | minusLoop
+00F 00000001 ABS    notype       Static       | @feat.00
+
+String Table Size = 0x23 bytes
+
+  Summary
+
+          14 .data
+          54 .text
