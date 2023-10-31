@@ -17,6 +17,8 @@ set(PROJECT_SOURCES
         CodeEditor.h
         Common.cpp
         Common.h
+        DebugTableWidget.cpp
+        DebugTableWidget.h
         main.cpp
         MainWindow.cpp
         MainWindow.h

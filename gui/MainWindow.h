@@ -20,7 +20,8 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <QMutex>
-#include "tab.h"
+#include "DebugTableWidget.h"
+#include "Tab.h"
 
 /*! \brief The MainWindow class defines the actions and behavior of the main user interface.
  *
@@ -91,7 +92,8 @@ private:
     QAction *helpAction;
     QAction *aboutAction;
 
-
+    QPointer<DebugTableWidget> registersWindow;
+    QDockWidget *registersDock;
     QString saveOpenDirectory;
 
 public slots:
@@ -103,6 +105,10 @@ public slots:
     bool saveAsFile(int index = -1);
     void openFile(QString path);
     bool deleteTab(int index, bool saveFileName = false);
+    void debugShowRegisters();
+
+signals:
+    void printRegisters(QList<DebugTableWidget::RegistersInfo>);
 };
 
 #endif

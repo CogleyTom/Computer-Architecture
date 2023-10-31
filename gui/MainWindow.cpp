@@ -5,7 +5,10 @@
 
 #include "mainwindow.h"
 
-#include <iostream>
+#include <string>
+
+using std::string;
+using std::to_string;
 
 MainWindow::MainWindow(/*const QStringList &args, */QWidget *parent)
     : QMainWindow(parent), settings("CSE 661", "Homework2")
@@ -22,6 +25,7 @@ MainWindow::MainWindow(/*const QStringList &args, */QWidget *parent)
     initUi();
     createActions();
     createMenus();
+    debugShowRegisters();
     openFile();
 }
 
@@ -87,8 +91,38 @@ void MainWindow::initUi()
     splitter->setSizes(QList<int>() << splitter->size().height() - compilerOutSize << compilerOutSize);
 }
 
-void MainWindow::createActions()
-{
+void MainWindow::debugShowRegisters() {
+  if (!registersWindow) {
+    registersDock = new QDockWidget(tr("Registers"), this);
+    registersDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+    int regCount = 16;
+    registersWindow = new DebugTableWidget(regCount, 3, registersTable, registersDock);
+    bool success = connect(this, SIGNAL(printRegisters(QList<DebugTableWidget::RegistersInfo>)),
+            registersWindow, SLOT(setRegisterValues(QList<DebugTableWidget::RegistersInfo>)));
+
+    registersDock->setWidget(registersWindow);
+    registersDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::RightDockWidgetArea, registersDock);
+    registersDock->setObjectName("registersDock");
+
+    if (registersDock) {
+      registersDock->show();
+    }
+
+    QList<DebugTableWidget::RegistersInfo> registers;
+    for (int i = 0; i < regCount; i++) {
+      DebugTableWidget::RegistersInfo reg;
+      QString num;
+      num.setNum(i);
+      reg.name = "r" + num;
+      registers.append(reg);
+    }
+    emit printRegisters(registers);
+  }
+}
+
+void MainWindow::createActions() {
     QSettings keySettings("keys.ini", QSettings::IniFormat);
 
     newAction = new QAction(tr("New"), this);
