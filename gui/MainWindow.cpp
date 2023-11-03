@@ -6,6 +6,7 @@
 #include "mainwindow.h"
 
 #include <string>
+#include <fstream>
 
 using std::string;
 using std::to_string;
@@ -48,25 +49,19 @@ void MainWindow::initUi()
     splitter->setOrientation(Qt::Vertical);
     workLayout = new QVBoxLayout;
     workLayout->addWidget(splitter);
-    // workLayout->setMargin(0);
     workLayout->setSpacing(0);
     workWidget = new QWidget;
     workWidget->setLayout(workLayout);
 
     //! Stacked widget
     mainWidget = new QStackedWidget;
-    // mainWidget->addWidget(getStartedWidget);
     mainWidget->addWidget(workWidget);
     mainWidget->setCurrentIndex(0); //get started
     setCentralWidget(mainWidget);
 
-    //! Create highlighter
-    // highlighter = new Highlighter(assembler);
-
     //! Create tabs
     tabs = new QTabWidget;
     connect(tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(deleteTab(int)));
-    connect(tabs, SIGNAL(currentChanged(int)), this, SLOT(changeCurrentTab(int)));
     tabs->setTabsClosable(true);
     tabs->setMovable(true);
 
@@ -78,16 +73,10 @@ void MainWindow::initUi()
     compilerOut->setFont(compilerOutFont);
     compilerOut->setText(tr("Build log:") + '\n');
 
-    //! Create gdb command widget
-    // debugAnyCommandWidget = new DebugAnyCommandWidget;
-
     //! Add widgets on splitter
     splitter->addWidget(tabs);
     splitter->addWidget(compilerOut);
-    // workLayout->addWidget(debugAnyCommandWidget);
     int compilerOutSize = 100;
-    // debugAnyCommandWidget->close();
-    // debugAnyCommandWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     splitter->setSizes(QList<int>() << splitter->size().height() - compilerOutSize << compilerOutSize);
 }
 
@@ -97,8 +86,8 @@ void MainWindow::debugShowRegisters() {
     registersDock->setAllowedAreas(Qt::AllDockWidgetAreas);
 
     int regCount = 16;
-    registersWindow = new DebugTableWidget(regCount, 3, registersTable, registersDock);
-    bool success = connect(this, SIGNAL(printRegisters(QList<DebugTableWidget::RegistersInfo>)),
+    registersWindow = new DebugTableWidget(regCount, 2, registersDock);
+    connect(this, SIGNAL(printRegisters(QList<DebugTableWidget::RegistersInfo>)),
             registersWindow, SLOT(setRegisterValues(QList<DebugTableWidget::RegistersInfo>)));
 
     registersDock->setWidget(registersWindow);
@@ -113,13 +102,82 @@ void MainWindow::debugShowRegisters() {
     QList<DebugTableWidget::RegistersInfo> registers;
     for (int i = 0; i < regCount; i++) {
       DebugTableWidget::RegistersInfo reg;
-      QString num;
-      num.setNum(i);
-      reg.name = "r" + num;
+      reg.name = QString(string("r" + to_string(i)).c_str());
       registers.append(reg);
     }
+
     emit printRegisters(registers);
   }
+}
+
+void MainWindow::buildProgram() {
+    QTextCursor cursor = QTextCursor(compilerOut->document());
+    cursor.movePosition(QTextCursor::End);
+    compilerOut->setTextCursor(cursor);
+    compilerOut->setTextColor(Qt::black);
+    compilerOut->insertPlainText(tr("Building...\n"));
+    cursor.movePosition(QTextCursor::End);
+    compilerOut->setTextCursor(cursor);
+    vector<vector<string>> parsedIns;
+
+    Tab *tab = (Tab *) tabs->currentWidget();
+    QString filePath = tab->getCurrentFilePath();
+    std::ifstream infile(qPrintable(filePath)); //Open the file that contains the ASM code (can keep the file as .s or ASM as well)
+    string line;	//Create a line object that will store the lines for the file
+
+    if (infile.is_open()) {		//If the file opened correctly
+      while (getline(infile, line)) {		//Write each line into line
+        if (line.size() == 0) {		//If line is empty
+          continue;	//Iterate the while loop
+        }
+        tokParse newTest(line);		//Otherwise create new tokParse object with the string 
+        newTest.doToken();	//Tokenize it 
+        newTest.jumpCheck();	//Check if its a jump or not and store the bool
+        vector<string> temp = newTest.parseInstruction(); //Parse the instruction
+        parsedIns.push_back(temp);
+      }
+    }
+    allParsedIns = parsedIns;
+    cursor.movePosition(QTextCursor::End);
+    compilerOut->setTextCursor(cursor);
+    compilerOut->setTextColor(Qt::darkGreen);
+    compilerOut->insertPlainText(tr("Build complete!\n"));
+    cursor.movePosition(QTextCursor::End);
+    compilerOut->setTextCursor(cursor);
+
+    exec = new instructExec(allParsedIns);
+}
+
+void MainWindow::nextIns() {
+    exec->doNextInstruction();
+    Tab *tab = (Tab *) tabs->currentWidget();
+    tab->printInstruction(QString(exec->getBinaryStr().c_str()));
+    tab->printMemory(QString(exec->getArch().getStackArchStr().c_str()));
+    auto registerVec = exec->getArch().getRegisterArch();
+
+    QList<DebugTableWidget::RegistersInfo> registers;
+    for (int i = 0; i < registerVec.size(); i++) {
+      DebugTableWidget::RegistersInfo reg;
+      reg.name = QString(string("r" + to_string(registerVec[i].getRegisterName())).c_str());
+      reg.decValue = QString(string(to_string(registerVec[i].getRegValue())).c_str());
+      registers.append(reg);
+    }
+
+    emit printRegisters(registers);
+
+    if (exec->getProgramComplete()) {
+      printExecComplete();
+    }
+}
+
+void MainWindow::printExecComplete() {
+    QTextCursor cursor = QTextCursor(compilerOut->document());
+    cursor.movePosition(QTextCursor::End);
+    compilerOut->setTextCursor(cursor);
+    compilerOut->setTextColor(Qt::darkGreen);
+    compilerOut->insertPlainText(tr("Execution Complete!\n"));
+    cursor.movePosition(QTextCursor::End);
+    compilerOut->setTextCursor(cursor);
 }
 
 void MainWindow::createActions() {
@@ -171,68 +229,15 @@ void MainWindow::createActions() {
     if (key == "default")
         key = stdKey.toString();
     buildAction->setShortcut(key);
-    //connect(buildAction, SIGNAL(triggered()), this, SLOT(buildProgram()));
+    connect(buildAction, SIGNAL(triggered()), this, SLOT(buildProgram()));
 
-    runAction = new QAction(tr("Build and run"), this);
+    runAction = new QAction(tr("Execute Next Instruction"), this);
     key = keySettings.value("run", "default").toString();
     stdKey = QKeySequence(QString("F9"));
     if (key == "default")
         key = stdKey.toString();
     runAction->setShortcut(key);
-    //connect(runAction, SIGNAL(triggered()), this, SLOT(runProgram()));
-
-    runExeAction = new QAction(tr("Run in new window"), this);
-    //connect(runExeAction, SIGNAL(triggered()), this, SLOT(runExeProgram()));
-
-    stopAction = new QAction(tr("Stop"), this);
-    //connect(stopAction, SIGNAL(triggered()), this, SLOT(stopProgram()));
-    //! Enable in runProgram(), disable in stop
-    stopAction->setEnabled(false);
-
-    debugAction = new QAction(tr("Debug"), this);
-    key = keySettings.value("debug", "default").toString();
-    stdKey = QKeySequence(QString("F5"));
-    if (key == "default")
-        key = stdKey.toString();
-    debugAction->setShortcut(key);
-    debugKey = key;
-    //connect(debugAction, SIGNAL(triggered()), this, SLOT(debug()));
-
-    debugNextNiAction = new QAction(tr("Step over"), this);
-    key = keySettings.value("stepOver", "default").toString();
-    stdKey = QKeySequence(QString("F10"));
-    if (key == "default")
-        key = stdKey.toString();
-    debugNextNiAction->setShortcut(key);
-    //connect(debugNextNiAction, SIGNAL(triggered()), this, SLOT(debugNextNi()));
-
-    debugNextAction = new QAction(tr("Step into"), this);
-    key = keySettings.value("stepInto", "default").toString();
-    stdKey = QKeySequence(QString("F11"));
-    if (key == "default")
-        key = stdKey.toString();
-    debugNextAction->setShortcut(key);
-    //connect(debugNextAction, SIGNAL(triggered()), this, SLOT(debugNext()));
-
-    debugShowRegistersAction = new QAction(tr("Show registers"), this);
-    key = keySettings.value("showRegisters", "default").toString();
-    stdKey = QKeySequence(QString("Ctrl+R"));
-    if (key == "default")
-        key = stdKey.toString();
-    debugShowRegistersAction->setShortcut(key);
-    debugShowRegistersAction->setCheckable(true);
-    //connect(debugShowRegistersAction, SIGNAL(toggled(bool)), this, SLOT(debugShowRegisters()), Qt::QueuedConnection);
-
-    debugShowMemoryAction = new QAction(tr("Show memory"), this);
-    key = keySettings.value("showMemory", "default").toString();
-    stdKey = QKeySequence(QString("Ctrl+M"));
-    if (key == "default")
-        key = stdKey.toString();
-    debugShowMemoryAction->setShortcut(key);
-    debugShowMemoryAction->setCheckable(true);
-    //connect(debugShowMemoryAction, SIGNAL(toggled(bool)), this, SLOT(debugShowMemory()), Qt::QueuedConnection);
-
-    // disableDebugActions(true);
+    connect(runAction, SIGNAL(triggered()), this, SLOT(nextIns()));
 }
 
 void MainWindow::closeFile()
@@ -263,7 +268,7 @@ bool MainWindow::saveFile(int index, bool openSaveAs)
 bool MainWindow::saveAsFile(int index)
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save file"), saveOpenDirectory,
-                                                    tr("Assembler source files (*.asm);;All files (*)"));
+                                                    tr("Assembler source files (*.txt);;All files (*)"));
     if (fileName.isEmpty()) {
         return false;
     }
@@ -312,21 +317,6 @@ void MainWindow::createMenus()
     buildMenu->addAction(buildAction);
     buildMenu->addSeparator();
     buildMenu->addAction(runAction);
-    #ifdef Q_OS_WIN32
-        buildMenu->addAction(runExeAction);
-    #endif
-    buildMenu->addSeparator();
-    buildMenu->addAction(stopAction);
-    debugMenu = menuBar()->addMenu(tr("Debug"));
-    debugMenu->addAction(debugAction);
-    debugMenu->addSeparator();
-    debugMenu->addAction(debugNextNiAction);
-    debugMenu->addAction(debugNextAction);
-    debugMenu->addSeparator();
-    debugMenu->addAction(debugShowRegistersAction);
-    debugMenu->addAction(debugShowMemoryAction);
-    debugMenu->addSeparator();
-    debugMenu->addAction(stopAction);
 }
 
 void MainWindow::newFile()
@@ -345,7 +335,7 @@ void MainWindow::newFile()
 void MainWindow::openFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), saveOpenDirectory,
-                                                    tr("Assembler source files (*.asm);;All files (*)"));
+                                                    tr("Assembler source files (*.txt);;All files (*)"));
     if (fileName.isEmpty()) {
         return;
     }

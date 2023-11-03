@@ -30,24 +30,24 @@ public:
     QTextDocument *getCodeDocument();
     void saveCodeToFile(const QString &filePath, bool changeCodeModifiedFlag = true, bool debugMode = false);
     void saveInputToFile(const QString &filePath);
-    void loadOutputFromFile(const QString &filePath);
     void loadCodeFromFile(const QString &filePath);
-    void appendOutput(QString msg);
     QString getCurrentFilePath();
     void clearOutput();
     void setFonts();
+    void printInstruction(const QString &code);
+    void printMemory(const QString &mem);
 
     CodeEditor *code;
 
 
 private: 
     //! Text fields
-    QVBoxLayout *inputLayout;
-    QVBoxLayout *outputLayout;
-    TextEdit *input;
-    TextEdit *output;
-    QWidget *inputWidget;
-    QWidget *outputWidget;
+    QVBoxLayout *instructionLayout;
+    QVBoxLayout *memoryLayout;
+    TextEdit *instruction;
+    TextEdit *memory;
+    QWidget *instructionWidget;
+    QWidget *memoryWidget;
 
     QString currentFilePath;
 };

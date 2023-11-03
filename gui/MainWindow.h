@@ -22,6 +22,9 @@
 #include <QMutex>
 #include "DebugTableWidget.h"
 #include "Tab.h"
+#include "../architecture/Architecture.h"
+#include "../architecture/TokParse.h"
+#include "../architecture/instructExec.h"
 
 /*! \brief The MainWindow class defines the actions and behavior of the main user interface.
  *
@@ -39,6 +42,7 @@ public:
     void createActions();
     void createMenus();
     void setTabPath(const QString &filePath, int index = -1);
+    void printExecComplete();
 
 private:
     //ui
@@ -51,6 +55,9 @@ private:
     QSettings settings;
     TextEdit *compilerOut;
     QString debugKey;
+
+	  vector<vector<string>> allParsedIns;
+    instructExec *exec = nullptr;
 
     //! Menus and Actions
     QMenu *fileMenu;
@@ -87,7 +94,6 @@ private:
     QAction *debugNextNiAction;
     QAction *debugToggleBreakpointAction;
     QAction *debugShowRegistersAction;
-    QAction *debugShowMemoryAction;
     QAction *settingsAction;
     QAction *helpAction;
     QAction *aboutAction;
@@ -106,6 +112,8 @@ public slots:
     void openFile(QString path);
     bool deleteTab(int index, bool saveFileName = false);
     void debugShowRegisters();
+    void buildProgram();
+    void nextIns();
 
 signals:
     void printRegisters(QList<DebugTableWidget::RegistersInfo>);

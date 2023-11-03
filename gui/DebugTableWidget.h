@@ -14,8 +14,6 @@
 #include <QByteArray>
 #include "PlainTextEdit.h"
 
-enum DebugTableWidgetType {registersTable, memoryTable};
-
 /**
  * ! \brief This class represents memory or registers table.
  *
@@ -30,14 +28,12 @@ class DebugTableWidget : public QTableWidget
 public:
     struct RegistersInfo {
         QString name;
-        QString hexValue;
         QString decValue;
     };
 
-    explicit DebugTableWidget(int rows, int columns, DebugTableWidgetType widgetType, QWidget *parent = 0);
+    explicit DebugTableWidget(int rows, int columns, QWidget *parent = 0);
     ~DebugTableWidget();
     bool isEmpty();
-    void initializeMemoryWindow(const QList<PlainTextEdit::Watch> &watches);
     static QByteArray memoryHeaderState;
     static QByteArray registerWindowState;
     static bool geometryMemorySaved;
@@ -50,20 +46,13 @@ protected:
 
 signals:
     void closeSignal();
-    void debugShowMemory();
 
 public slots:
-    void deleteVariable();
-    void addVariable(const QString &variableName, int rowNumber = -1);
-    void addVariable(const PlainTextEdit::Watch &variable, int rowNumber = -1);
-    void changeVariableValue(const QString &value, int rowNumber, bool isValid);
-    void addRegister(const QString &name, const QString &hexValue, const QString &decValue, int rowNumber);
-    void changeMemoryWindow(int row, int column);
+    void addRegister(const QString &name, const QString &decValue, int rowNumber);
     void setRegisterValues(QList<RegistersInfo> registers);
 
 private:
     int contextMenuLineNumber;
-    DebugTableWidgetType type;
     bool empty;
     bool firstTime;
 };

@@ -13,35 +13,35 @@ Tab::Tab(QWidget *parent) :
     code = new CodeEditor;
     setCentralWidget(code);
 
-    //! Setting opcode and output fields
-    input = new TextEdit;
-    output = new TextEdit;
-    input->setReadOnly(true);
-    output->setReadOnly(true);
-    inputLayout = new QVBoxLayout;
-    outputLayout = new QVBoxLayout;
-    inputLayout->addWidget(input);
-    outputLayout->addWidget(output);
+    //! Setting instruction and memory fields
+    instruction = new TextEdit;
+    memory = new TextEdit;
+    instruction->setReadOnly(true);
+    memory->setReadOnly(true);
+    instructionLayout = new QVBoxLayout;
+    memoryLayout = new QVBoxLayout;
+    instructionLayout->addWidget(instruction);
+    memoryLayout->addWidget(memory);
 
     setDockOptions(QMainWindow::AllowNestedDocks | QMainWindow::AnimatedDocks);
 
-    QDockWidget *inputDock = new QDockWidget(tr("Input"), this);
-    inputDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-    inputWidget = new QWidget(inputDock);
-    inputWidget->setLayout(inputLayout);
-    inputDock->setWidget(inputWidget);
-    inputDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::RightDockWidgetArea, inputDock);
-    inputDock->setObjectName("inputDock");
+    QDockWidget *instructionDock = new QDockWidget(tr("Instruction"), this);
+    instructionDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    instructionWidget = new QWidget(instructionDock);
+    instructionWidget->setLayout(instructionLayout);
+    instructionDock->setWidget(instructionWidget);
+    instructionDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::RightDockWidgetArea, instructionDock);
+    instructionDock->setObjectName("instructionDock");
 
-    QDockWidget *outputDock = new QDockWidget(tr("Output"), this);
-    outputDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-    outputWidget = new QWidget(outputDock);
-    outputWidget->setLayout(outputLayout);
-    outputDock->setWidget(outputWidget);
-    outputDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::RightDockWidgetArea, outputDock);
-    outputDock->setObjectName("outputDock");
+    QDockWidget *memoryDock = new QDockWidget(tr("Memory"), this);
+    memoryDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    memoryWidget = new QWidget(memoryDock);
+    memoryWidget->setLayout(memoryLayout);
+    memoryDock->setWidget(memoryWidget);
+    memoryDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::RightDockWidgetArea, memoryDock);
+    memoryDock->setObjectName("memoryDock");
 
     //! Setting io and code fonts
     setFonts();
@@ -69,8 +69,8 @@ void Tab::setFonts()
 
     QFont logFont;
     logFont.setPointSize(settings.value("fontsize", 12).toInt());
-    input->setFont(logFont);
-    output->setFont(logFont);
+    instruction->setFont(logFont);
+    memory->setFont(logFont);
 }
 
 
@@ -140,38 +140,16 @@ void Tab::saveInputToFile(const QString &filePath)
     outfile.setFileName(filePath);
     outfile.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&outfile);
-    out << input->toPlainText();
+    out << instruction->toPlainText();
     outfile.close();
 }
 
-/*! \brief
- *
- *
-*/
-void Tab::loadOutputFromFile(const QString &filePath)
-{
-    QFile outputFile;
-    outputFile.setFileName(filePath);
-    outputFile.open(QIODevice::ReadOnly);
-    QTextStream programOut(&outputFile);
-    QString out = programOut.readAll();
-    output->setPlainText(out);
-    outputFile.close();
+void Tab::printInstruction(const QString &code) {
+    instruction->setPlainText(code);
 }
 
-/*! \brief
- *
- *
-*/
-void Tab::appendOutput(QString msg)
-{
-    msg = output->toPlainText().right(2000) + msg.right(2000);
-    msg = msg.right(2000);
-    output->setText(msg);
-    //! Scroll
-    QTextCursor cursor = output->textCursor();
-    cursor.movePosition(QTextCursor::End);
-    output->setTextCursor(cursor);
+void Tab::printMemory(const QString &mem) {
+    memory->setPlainText(mem);
 }
 
 /*! \brief
@@ -180,7 +158,7 @@ void Tab::appendOutput(QString msg)
 */
 void Tab::clearOutput()
 {
-    output->clear();
+    memory->clear();
 }
 /*! \brief Destructor for the Tab objects.
  *
@@ -188,14 +166,14 @@ void Tab::clearOutput()
 */
 Tab::~Tab()
 {
-    delete input;
-    delete output;
+    delete instruction;
+    delete memory;
 
-    delete inputLayout;
-    delete outputLayout;
+    delete instructionLayout;
+    delete memoryLayout;
 
     delete code;
 
-    delete inputWidget;
-    delete outputWidget;
+    delete instructionWidget;
+    delete memoryWidget;
 }

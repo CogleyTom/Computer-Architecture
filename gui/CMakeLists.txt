@@ -28,6 +28,16 @@ set(PROJECT_SOURCES
         PlainTextEdit.h
         TextEdit.cpp
         TextEdit.h
+        ../architecture/Architecture.cpp
+        ../architecture/Architecture.h
+        ../architecture/instructExec.cpp
+        ../architecture/instructExec.h
+        ../architecture/Registers.cpp
+        ../architecture/Registers.h
+        ../architecture/Stack.cpp
+        ../architecture/Stack.h
+        ../architecture/TokParse.cpp
+        ../architecture/TokParse.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

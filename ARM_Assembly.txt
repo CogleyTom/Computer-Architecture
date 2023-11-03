@@ -1,0 +1,8 @@
+MOV, R1, #20
+MOV, R2, #5
+MOV, R3, #5
+CMP R1, R2
+BEQ, 7
+ADDR R2, R2
+B, 3
+SWI, 1111
