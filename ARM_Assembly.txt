@@ -3,6 +3,6 @@ MOV, R2, #5
 MOV, R3, #5
 CMP R1, R2
 BEQ, 7
-ADDR R2, R2
+ADDI R2, R3
 B, 3
 SWI, 1111
